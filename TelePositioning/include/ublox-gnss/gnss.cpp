@@ -29,14 +29,18 @@
 #define SEND_LOGGING_MESSAGE printf
 #endif
 
+// Edit to make GNSS enable pin optional
+#define HAS_GNSS_ENABLE_PIN false
+
 GnssParser::GnssParser(void)
 {
     // Create the enable pin but set everything to disabled
     _gnssEnable = NULL;
 
+// Edit to make GNSS enable pin optional
 #ifdef TARGET_UBLOX_C030
     _gnssEnable = new DigitalInOut(GNSSEN, PIN_OUTPUT, PushPullNoPull, 0);
-#else
+#elif HAS_GNSS_ENABLE_PIN
     _gnssEnable = new DigitalInOut(GNSSEN, PIN_OUTPUT, PullNone, 1);
 #endif
 }
