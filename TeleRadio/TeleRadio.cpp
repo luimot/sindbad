@@ -10,6 +10,10 @@ void TeleRadio::setEvents(){
         receivedRSSI = rssi;
         memcpy(&data, payload, sizeof(Data));
     };
+    radioEvents.tx_timeout = [this](){
+        radio.radio_reset();
+        radio.standby();
+        };
     
 }
 
