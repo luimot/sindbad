@@ -29,7 +29,7 @@
 #define SEND_LOGGING_MESSAGE printf
 #endif
 
-// Edit to make GNSS enable pin optional
+// Edit to make GNSS enable pin optional in sindbad project
 #define HAS_GNSS_ENABLE_PIN false
 
 GnssParser::GnssParser(void)
@@ -37,7 +37,7 @@ GnssParser::GnssParser(void)
     // Create the enable pin but set everything to disabled
     _gnssEnable = NULL;
 
-// Edit to make GNSS enable pin optional
+// Edit to make GNSS enable pin optional in sindbad project
 #ifdef TARGET_UBLOX_C030
     _gnssEnable = new DigitalInOut(GNSSEN, PIN_OUTPUT, PushPullNoPull, 0);
 #elif HAS_GNSS_ENABLE_PIN

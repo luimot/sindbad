@@ -16,6 +16,9 @@
 #ifndef PIPE_H
 #define PIPE_H
 
+// Added to sindbad project to include some symbols
+#include "mbed.h"
+
 /** pipe, this class implements a buffered pipe that can be savely 
     written and read between two context. E.g. Written from a task 
     and read from a interrupt.
