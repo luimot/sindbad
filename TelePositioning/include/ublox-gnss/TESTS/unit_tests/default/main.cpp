@@ -100,7 +100,8 @@ void test_serial_ubx() {
                     printHex(buffer, responseLength);
                 }
             }
-            wait_ms (100);
+            // Altered for sindbad project Mbed6, uses wait_us()
+            wait_us (100e3);
         }
         timer.stop();
         timer.reset();
@@ -185,8 +186,8 @@ void test_serial_time() {
                 }
             }
         }
-
-        wait_ms(1000);
+        // Altered for sindbad project Mbed6, uses wait_us()
+        wait_us(1000e3);
     }
 
     printf("\n");
