@@ -26,22 +26,20 @@ int main(){
     debugPrint("Start program\n");
     TeleRadio tradio;
     TelePositioning tposition;
-    tposition.init();
+    // tposition.init();
     tradio.init();
-    debugLED = 1;    
-    ThisThread::sleep_for(2s);
-    debugLED = 0;
-    ThisThread::sleep_for(2s);
-    while(1){
-        tposition.updateLatLong();
-        if(tradio.radioStatus() != RF_TX_RUNNING){
-            debugLED = 1;
-            tradio.send(&data);
-        }
-        else{
-            debugLED = 0;
-        }
-    }
+    tposition.test();
+    // while(1){
+        // tposition.updateLatLong();
+
+        // if(tradio.radioStatus() != RF_TX_RUNNING){
+        //     debugLED = 1;
+        //     tradio.send(&data);
+        // }
+        // else{
+        //     debugLED = 0;
+        // }
+    // }
     
     return 0;
 }

@@ -1,3 +1,4 @@
+#include "BufferedSerial.h"
 #include "gnss.h"
 #include "globalDefines.h"
 
@@ -19,6 +20,7 @@ class TelePositioning{
 #endif
     /* GPS PRIVATE INTERACTION METHODS */
     void gnssParse(char* buffer, int returnCode, LatLong* pos);
+    void test_serial_time();
     
     public:
     LatLong position;
@@ -27,5 +29,6 @@ class TelePositioning{
     /* GPS INTERACTION METHODS */
     void init();
     LatLong updateLatLong();
+    void test();
 };
 
