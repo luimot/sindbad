@@ -5,27 +5,27 @@
 void TelePositioning::init(){
     debugPrint("Starting GNSS...\n");
 #ifdef GPS_UART
-    gnss = new GnssSerial(GPS_TX,GPS_RX,GPS_BAUDRATE);
+    gnss = new BufferedSerial(GPS_TX,GPS_RX);
+    gnss->set_baud(GPS_BAUDRATE);
+    gnss->set_format(8);
     debugPrint("UART GNSS Starting...\n");
 #else
     gnss = new GnssI2C(GPS_SDA,GPS_SCL);
 #endif
-    bool status = gnss->init();
-    status?debugPrint("Connected\n"):debugPrint("Not connected\n");
 }
 
-// This function is heavily based on the ublox-gnss unit test `test_serial_time()` 
-void TelePositioning::gnssParse(char* buffer, int returnCode, LatLong* pos){
+// This function is heavily based on the ublox-gnss unit test `test_serial_time()` if not an almost copy-paste
+void TelePositioning::gnssParse(char* buffer, int length, LatLong* pos){
 #define _CHECK_TALKER(s) ((buffer[3] == s[0]) && (buffer[4] == s[1]) && (buffer[5] == s[2]))
-    int32_t length = LENGTH(returnCode);
-    if ((PROTOCOL(returnCode) == GnssParser::NMEA) && (length > 6)){
+    // int32_t length = LENGTH(returnCode);
+    // if ((PROTOCOL(returnCode) == GnssParser::NMEA) && (length > 6)){
         //Check if it's one of either: Galileo, Beidou, Glonass, GNSS or Combined
         if ((buffer[0] == '$') || buffer[1] == 'G'){
             if (_CHECK_TALKER("GLL")){
                 char ch;
-                if (gnss->getNmeaAngle(1, buffer, length, pos->latitude) &&
-                    gnss->getNmeaAngle(3, buffer, length, pos->longitude) &&
-                    gnss->getNmeaItem(6, buffer, length, ch) &&
+                if (parser->getNmeaAngle(1, buffer, length, pos->latitude) &&
+                    parser->getNmeaAngle(3, buffer, length, pos->longitude) &&
+                    parser->getNmeaItem(6, buffer, length, ch) &&
                     ch == 'A')
                 {
                     pos->latitude *= 60000;
@@ -38,54 +38,38 @@ void TelePositioning::gnssParse(char* buffer, int returnCode, LatLong* pos){
                 const char *pTimeString = NULL;
 
                 // Retrieve the time
-                pTimeString = gnss->findNmeaItemPos(1, buffer, buffer + length);
+                pTimeString = parser->findNmeaItemPos(1, buffer, buffer + length);
                 if (pTimeString != NULL)
                 {
                     debugPrint("GNSS: time is %.6s.\n", pTimeString);
                 }
 
-                if (gnss->getNmeaItem(9, buffer, length, pos->elevation)) // altitude msl [m]
+                if (parser->getNmeaItem(9, buffer, length, pos->elevation)) // altitude msl [m]
                 {
                     debugPrint("GNSS: elevation: %.1f.\n", pos->elevation);
                 }
             }
             else if (_CHECK_TALKER("VTG"))
             {
-                if (gnss->getNmeaItem(7, buffer, length, pos->speed)) // speed [km/h]
+                if (parser->getNmeaItem(7, buffer, length, pos->speed)) // speed [km/h]
                 {
                     debugPrint("GNSS: speed: %.1f.\n", pos->speed);
                 }
             }
         }
 
-    }
+    // }
 
 
 }
 
 LatLong TelePositioning::updateLatLong(){
     LatLong pos;
-    //TODO
-    char buffer[512];
-    int returnCode;
-    // If getMessage returns something < 0 it means WAIT
-    // BufferedSerial device(GPS_TX,GPS_RX);
-    // device.set_baud(9600);
-    // bool status = device.sync();
-    // status?debugPrint("Connected\n"):debugPrint("Not connected\n");
-    // test_serial_time()
-    GnssSerial device(GPS_TX,GPS_RX,9600);
-    bool status = device.init();
-    status?debugPrint("Connected\n"):debugPrint("Not connected\n");
-    while(1){
-        memset(buffer,0,sizeof(buffer));
-        int size = device.getMessage(buffer,sizeof(buffer));
-        if(size>0) debugPrint("%s",buffer);
-    }
-    // while((returnCode = gnss->getMessage(buffer,sizeof(buffer))) > 0){
-    //     debugPrint("%s\n",buffer);
-    //     gnssParse(buffer, returnCode, &pos);
-    // }
+    char buffer[BUFFERSIZE];
+    debugPrint("Getting data from GPS module...\n");
+    int size = getDataFromGPS(buffer);
+    debugPrint("Parsing data...\n");
+    gnssParse(buffer, size, &pos);
     return pos;
 }
 
@@ -124,6 +108,7 @@ void TelePositioning::test_serial_time() {
 #define _CHECK_TALKER(s) ((buffer[3] == s[0]) && (buffer[4] == s[1]) && (buffer[5] == s[2]))
                     if (_CHECK_TALKER("GLL"))
                     {
+                        debugPrint("GLL!");
                         char ch;
 
                         if (pGnss->getNmeaAngle(1, buffer, length, latitude) &&
@@ -177,7 +162,39 @@ void TelePositioning::test_serial_time() {
 }
 
 
+int TelePositioning::getDataFromGPS(char* message){
+    char buffer[1];
+    bool startNMEA = false;
+    int size;
+    int index = 0;
+    while(1){   // TODO: Switch break to something with a timer
+        size=0;
+        memset(buffer, 0, sizeof(buffer));
+        if(gnss->readable()){
+            size = gnss->read(buffer, sizeof(buffer)); //Read data
+        }
 
+        debugPrint("%d\n",index);
+        // Copy message from buffer
+        if(buffer[0] == '\n'){
+            startNMEA = false;
+            message[index] = buffer[0];
+            // index = 0;
+            break;
+        }
+        if(startNMEA && size > 0) message[index] = buffer[0];
+        if(startNMEA == false && strcmp(buffer, "$")){
+            index = 0;
+            memset(message,0,BUFFERSIZE);
+            message[0] = buffer[0];
+            startNMEA = true;
+        }
+        if(startNMEA && size > 0) index++;
+        if(index >= 255) index = 0; // Safety
+    }
+    // debugPrint("%s",message);
+    return index;
+}
 
 void TelePositioning::test(){
     char buffer[1];

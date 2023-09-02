@@ -26,11 +26,11 @@ int main(){
     debugPrint("Start program\n");
     TeleRadio tradio;
     TelePositioning tposition;
-    // tposition.init();
+    tposition.init();
     tradio.init();
-    tposition.test();
-    // while(1){
-        // tposition.updateLatLong();
+    // tposition.test();
+    while(1){
+        tposition.updateLatLong();
 
         // if(tradio.radioStatus() != RF_TX_RUNNING){
         //     debugLED = 1;
@@ -39,7 +39,7 @@ int main(){
         // else{
         //     debugLED = 0;
         // }
-    // }
+    }
     
     return 0;
 }
