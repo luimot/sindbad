@@ -5,7 +5,6 @@
 #include "BufferedSerial.h"
 
 #include "PinNames.h"
-#include "ThisThread.h"
 #include "Data.h"
 
 #include "TeleRadio.h"
@@ -20,7 +19,6 @@ void setupUSBSerial()
     port.set_format(8);
 }
 
-
 int main(){
     setupUSBSerial();
     debugPrint("Start program\n");
@@ -28,10 +26,12 @@ int main(){
     TelePositioning tposition;
     tposition.init();
     tradio.init();
+    PositionInfo pos;
     // tposition.test();
     while(1){
-        tposition.updateLatLong();
-
+        pos = tposition.updatePositionInfo();
+        printf("\tLatitude: %.5f\n\tLongitude: %.5f\n",pos.position.latitude,pos.position.longitude);
+        printf("\tElevation: %.1f\n\t Speed: %.1f\n",pos.position.elevation,pos.position.speed);
         // if(tradio.radioStatus() != RF_TX_RUNNING){
         //     debugLED = 1;
         //     tradio.send(&data);

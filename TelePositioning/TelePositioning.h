@@ -5,6 +5,12 @@
 
 #define BUFFERSIZE 256
 
+/* GPS AND PARSER FUNCTION-LIKE MACROS */
+#define COUNT_TIME(t) std::chrono::duration_cast<std::chrono::milliseconds>(t.elapsed_time()).count()
+#define DIDNT_TIMEOUT(t) COUNT_TIME(t) < GPS_TIMEOUT
+#define _CHECK_TALKER(buffer,s) ((buffer[3] == s[0]) && (buffer[4] == s[1]) && (buffer[5] == s[2]))
+
+
 typedef struct{
     double latitude;
     double longitude;
@@ -15,8 +21,13 @@ typedef struct{
 typedef struct{
     uint8_t numbSat;
     uint8_t gpsFix;
-    long satTime;
+    int satTime;
 } SatInfo;
+
+typedef struct{
+    LatLong position;
+    SatInfo satelliteInfo;
+} PositionInfo;
 
 class TelePositioning{
     private:
@@ -28,15 +39,15 @@ class TelePositioning{
 #endif
     /* GPS PRIVATE INTERACTION METHODS */
     int getDataFromGPS(char* message);
-    void gnssParse(char* buffer, int returnCode, LatLong* pos);
-    void test_serial_time();
+    void gnssParse(char* buffer, int returnCode, PositionInfo* position);
+    void gnssParse(char* buffer, int length, LatLong* position);
     
     public:
     LatLong position;
-
+    SatInfo sattelite;
     /* GPS INTERACTION METHODS */
     void init();
     LatLong updateLatLong();
-    void test();
+    PositionInfo updatePositionInfo();
 };
 
