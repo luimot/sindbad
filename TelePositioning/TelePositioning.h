@@ -22,6 +22,7 @@ typedef struct{
     uint8_t numbSat;
     uint8_t gpsFix;
     int satTime;
+    int satDate;
 } SatInfo;
 
 typedef struct{
@@ -48,6 +49,6 @@ class TelePositioning{
     /* GPS INTERACTION METHODS */
     void init();
     LatLong updateLatLong();
-    PositionInfo updatePositionInfo();
+    void updatePositionInfo(PositionInfo* posInfo);
 };
 

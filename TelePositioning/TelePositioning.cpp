@@ -60,6 +60,12 @@ void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position
                 debugPrint("GNSS: speed: %.1f.\n", position->position.speed);
             }
         }
+        else if(_CHECK_TALKER(buffer, "RMC"))
+        {
+            if (parser->getNmeaItem(9,buffer,length,position->satelliteInfo.satDate,10)){
+                debugPrint("GNSS: date: %d\n",position->satelliteInfo.satDate);
+            }
+        }
     }
 }
 
@@ -78,17 +84,14 @@ void TelePositioning::gnssParse(char* buffer, int length, LatLong* position){
     }
 }
 
-PositionInfo TelePositioning::updatePositionInfo(){
-    PositionInfo posInfo;
+void TelePositioning::updatePositionInfo(PositionInfo* posInfo){
     char buffer[BUFFERSIZE];
     int size = getDataFromGPS(buffer);
-    gnssParse(buffer, size, &posInfo);
-    return posInfo; 
+    gnssParse(buffer, size, posInfo);
 }
 
 LatLong TelePositioning::updateLatLong(){
     LatLong pos;
-    SatInfo info;
     char buffer[BUFFERSIZE];
     int size = getDataFromGPS(buffer);
     gnssParse(buffer, size, &pos);
@@ -113,11 +116,14 @@ int TelePositioning::getDataFromGPS(char* message){
         if(buffer[0] == '\n'){
             startNMEA = false;
             message[index] = buffer[0];
-            // index = 0;
+            // TODO: Make and test a ending verification, for instance, if
+            // the message does not end with \n it is probably broke and index
+            // can be returned as 0, checksum could also be a good thing
+            // Indication of error: Incorrect date at $GNRMC
             break;
         }
         if(startNMEA && size > 0) message[index] = buffer[0];
-        if(startNMEA == false && strcmp(buffer, "$")){
+        if(startNMEA == false && buffer[0] == '$'){
             index = 0;
             memset(message,0,BUFFERSIZE);
             message[0] = buffer[0];
