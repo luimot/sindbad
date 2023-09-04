@@ -1,6 +1,7 @@
 #include "BufferedSerial.h"
 #include "mbed.h"
 #include "TelePositioning.h"
+#include <cstdint>
 #include <cstring>
 void TelePositioning::init(){
     debugPrint("Starting GNSS...\n");
@@ -40,7 +41,11 @@ void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position
                 debugPrint("GNSS: gpsFix is %d.\n",gpsFix);
             }
             // Retrieve numbSat
-            //TODO
+            int numbSat;
+            if(parser->getNmeaItem(7,buffer,length,numbSat,10)){
+                position->satelliteInfo.numbSat = (uint8_t)numbSat;
+                debugPrint("GNSS: numbSat is %d.\n",gpsFix);
+            }
 
             if (pTimeString != NULL)
             {
