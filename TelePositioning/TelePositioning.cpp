@@ -1,77 +1,139 @@
+#include "BufferedSerial.h"
+#include "mbed.h"
 #include "TelePositioning.h"
-
+#include <cstring>
 void TelePositioning::init(){
     debugPrint("Starting GNSS...\n");
 #ifdef GPS_UART
-    gnss = new GnssSerial(GPS_TX,GPS_RX,GPS_BAUDRATE);
-    debugPrint("UART GNSS Started...\n");
+    gnss = new BufferedSerial(GPS_TX,GPS_RX);
+    gnss->set_baud(GPS_BAUDRATE);
+    gnss->set_format(8);
+    debugPrint("UART GNSS Starting...\n");
 #else
     gnss = new GnssI2C(GPS_SDA,GPS_SCL);
 #endif
-    gnss->init();
 }
 
-// This function is heavily based on the ublox-gnss unit test `test_serial_time()` 
-void TelePositioning::gnssParse(char* buffer, int returnCode, LatLong* pos){
-#define _CHECK_TALKER(s) ((buffer[3] == s[0]) && (buffer[4] == s[1]) && (buffer[5] == s[2]))
-    int32_t length = LENGTH(returnCode);
-    if ((PROTOCOL(returnCode) == GnssParser::NMEA) && (length > 6)){
-        //Check if it's one of either: Galileo, Beidou, Glonass, GNSS or Combined
-        if ((buffer[0] == '$') || buffer[1] == 'G'){
-            if (_CHECK_TALKER("GLL")){
-                char ch;
-                if (gnss->getNmeaAngle(1, buffer, length, pos->latitude) &&
-                    gnss->getNmeaAngle(3, buffer, length, pos->longitude) &&
-                    gnss->getNmeaItem(6, buffer, length, ch) &&
-                    ch == 'A')
-                {
-                    pos->latitude *= 60000;
-                    pos->longitude *= 60000;
-                    debugPrint("GNSS: location %.5f %.5f %c.\n", pos->latitude, pos->longitude, ch);
-                }
-            }
-            else if (_CHECK_TALKER("GGA") || _CHECK_TALKER("GNS"))
-            {
-                const char *pTimeString = NULL;
+// This function is heavily based on the ublox-gnss unit test `test_serial_time()` if not an almost copy-paste
+void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position){
+    //Check if it's one of either: Galileo, Beidou, Glonass, GNSS or Combined
+    if ((buffer[0] == '$') || buffer[1] == 'G'){
+        if (_CHECK_TALKER(buffer,"GLL")){
+            char ch;
+            if (parser->getNmeaAngle(1, buffer, length, position->position.latitude) &&
+                parser->getNmeaAngle(3, buffer, length, position->position.longitude) &&
+                parser->getNmeaItem(6, buffer, length, ch) &&
+                ch == 'A')
+                debugPrint("GNSS: location %.5f %.5f %c.\n",
+                            position->position.latitude, position->position.longitude, ch);
+        }
+        else if (_CHECK_TALKER(buffer,"GGA") || _CHECK_TALKER(buffer,"GNS"))
+        {
+            const char *pTimeString = NULL;
+            int gpsFix;
 
-                // Retrieve the time
-                pTimeString = gnss->findNmeaItemPos(1, buffer, buffer + length);
-                if (pTimeString != NULL)
-                {
-                    debugPrint("GNSS: time is %.6s.\n", pTimeString);
-                }
-
-                if (gnss->getNmeaItem(9, buffer, length, pos->elevation)) // altitude msl [m]
-                {
-                    debugPrint("GNSS: elevation: %.1f.\n", pos->elevation);
-                }
+            // Retrieve the time
+            pTimeString = parser->findNmeaItemPos(1, buffer, buffer + length);
+            // Retrieve gps Fix
+            if(parser->getNmeaItem(6, buffer, length, gpsFix, 10)){
+                position->satelliteInfo.gpsFix = gpsFix;
+                debugPrint("GNSS: gpsFix is %d.\n",gpsFix);
             }
-            else if (_CHECK_TALKER("VTG"))
+            // Retrieve numbSat
+            //TODO
+
+            if (pTimeString != NULL)
             {
-                if (gnss->getNmeaItem(7, buffer, length, pos->speed)) // speed [km/h]
-                {
-                    debugPrint("GNSS: speed: %.1f.\n", pos->speed);
-                }
+                position->satelliteInfo.satTime = atoi(pTimeString);
+                debugPrint("GNSS: time is %.6s.\n", pTimeString);
+            }
+
+            if (parser->getNmeaItem(9, buffer, length, position->position.elevation)) // altitude msl [m]
+            {
+                debugPrint("GNSS: elevation: %.1f.\n", position->position.elevation);
             }
         }
-
+        else if (_CHECK_TALKER(buffer,"VTG"))
+        {
+            if (parser->getNmeaItem(7, buffer, length, position->position.speed)) // speed [km/h]
+            {
+                debugPrint("GNSS: speed: %.1f.\n", position->position.speed);
+            }
+        }
+        else if(_CHECK_TALKER(buffer, "RMC"))
+        {
+            if (parser->getNmeaItem(9,buffer,length,position->satelliteInfo.satDate,10)){
+                debugPrint("GNSS: date: %d\n",position->satelliteInfo.satDate);
+            }
+        }
     }
+}
 
+void TelePositioning::gnssParse(char* buffer, int length, LatLong* position){
+    //Check if it's one of either: Galileo, Beidou, Glonass, GNSS or Combined
+    if ((buffer[0] == '$') || buffer[1] == 'G'){
+        if (_CHECK_TALKER(buffer,"GLL")){
+            char ch;
+            if (parser->getNmeaAngle(1, buffer, length, position->latitude) &&
+                parser->getNmeaAngle(3, buffer, length, position->longitude) &&
+                parser->getNmeaItem(6, buffer, length, ch) &&
+                ch == 'A')
+                debugPrint("GNSS: location %.5f %.5f %c.\n",
+                            position->latitude, position->longitude, ch);
+        }
+    }
+}
 
+void TelePositioning::updatePositionInfo(PositionInfo* posInfo){
+    char buffer[BUFFERSIZE];
+    int size = getDataFromGPS(buffer);
+    gnssParse(buffer, size, posInfo);
 }
 
 LatLong TelePositioning::updateLatLong(){
     LatLong pos;
-    //TODO
-    char buffer[256];
-    int returnCode;
-    memset(buffer,0,sizeof(buffer));
-    // If getMessage returns something < 0 it means WAIT
-    if(gnss->getMessage(buffer,sizeof(buffer)) != -1)
-        debugPrint("%s\n",buffer); 
-    // while((returnCode = gnss->getMessage(buffer,sizeof(buffer))) > 0){
-    //     debugPrint("%s\n",buffer);
-    //     gnssParse(buffer, returnCode, &pos);
-    // }
+    char buffer[BUFFERSIZE];
+    int size = getDataFromGPS(buffer);
+    gnssParse(buffer, size, &pos);
     return pos;
+}
+
+int TelePositioning::getDataFromGPS(char* message){
+    char buffer[1];
+    bool startNMEA = false;
+    int size;
+    int index = 0;
+    Timer timeoutTimer;
+    timeoutTimer.start();
+    while(DIDNT_TIMEOUT(timeoutTimer)){
+        size=0;
+        memset(buffer, 0, sizeof(buffer));
+        if(gnss->readable()){
+            size = gnss->read(buffer, sizeof(buffer)); //Read data
+        }
+
+        // Copy message from buffer
+        if(buffer[0] == '\n'){
+            startNMEA = false;
+            message[index] = buffer[0];
+            // TODO: Make and test a ending verification, for instance, if
+            // the message does not end with \n it is probably broke and index
+            // can be returned as 0, checksum could also be a good thing
+            // Indication of error: Incorrect date at $GNRMC
+            break;
+        }
+        if(startNMEA && size > 0) message[index] = buffer[0];
+        if(startNMEA == false && buffer[0] == '$'){
+            index = 0;
+            memset(message,0,BUFFERSIZE);
+            message[0] = buffer[0];
+            startNMEA = true;
+        }
+        if(startNMEA && size > 0) index++;
+        if(index >= 255) index = 0; // Safety
+    }
+    debugPrint("Time: %lld ms\n",COUNT_TIME(timeoutTimer));
+    timeoutTimer.stop();
+    debugPrintNMEA("%s",message);
+    return index;
 }

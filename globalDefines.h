@@ -10,15 +10,16 @@
 #define LORA_FHSS_PERIOD 4
 #define LORA_PREAMBLE_LENGTH 0x8
 #define LORA_INVERT_IQ false
-#define LORA_TIMEOUT_PERIOD 2000 //ms
-#define TX_OUTPUT_POWER 20 // Em dBm
+#define LORA_TIMEOUT_PERIOD 2000 // ms
+#define TX_OUTPUT_POWER 20 // dBm
 
-#define RF_FREQUENCY 915e6
+#define RF_FREQUENCY 915e6 // Hz
 
 /* GLOBAL POSITIONING DEFINES */
 
 #define GPS_EN
 #define GPS_UART
+#define GPS_TIMEOUT 100 //In ms
 
 #ifdef GPS_EN
 #ifdef GPS_UART
@@ -38,6 +39,7 @@
 /* PRINT OPTION DEFINES */
 
 #define DEBUG_MESSAGES
+#define DEBUG_NMEA_MESSAGES
 
 // If debug messages are active, debugPrint is used as printf, otherwise it
 // will be treated as an empty function
@@ -46,3 +48,11 @@
 #else
 #define debugPrint(...)
 #endif
+
+// If NMEA debug messages are active, when the uC retrieves messages from the GPS
+// it will print the NMEA messages it got.
+#ifdef DEBUG_NMEA_MESSAGES
+#define debugPrintNMEA(...) printf(__VA_ARGS__)
+#else
+#define debugPrintNMEA(...)
+#endif 
