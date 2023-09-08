@@ -9,6 +9,7 @@
 
 #include "TeleRadio.h"
 #include "TeleData.h"
+#include "Storage.h"
 
 Data data;
 DigitalOut debugLED(LED1);
@@ -26,15 +27,19 @@ int main(){
     TeleData tdata;
     tradio.init();
     tdata.initSensors();
+    Storage st;
+    st.initFlashStorage();
+    st.createFlashFile();
+    st.closeFlashFile();
     while(1){
-        tdata.updateData(&data);
-        if(tradio.radioStatus() != RF_TX_RUNNING){
-            debugLED = 1;
-            tradio.send(&data);
-        }
-        else{
-            debugLED = 0;
-        }
+        // tdata.updateData(&data);
+        // if(tradio.radioStatus() != RF_TX_RUNNING){
+        //     debugLED = 1;
+        //     tradio.send(&data);
+        // }
+        // else{
+        //     debugLED = 0;
+        // }
     }
     return 0;
 }

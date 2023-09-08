@@ -36,6 +36,17 @@
 #endif
 #endif
 
+/* STORAGE DEFINES */
+/* FLASH SPI INTERFACE */
+
+#define FLASH_MOSI  PA_7
+#define FLASH_MISO  PA_6
+#define FLASH_SCLK  PA_5
+#define FLASH_CS    PA_4
+
+// #define FORCE_REFORMAT_FLASH
+
+
 /* PRINT OPTION DEFINES */
 
 #define DEBUG_MESSAGES
