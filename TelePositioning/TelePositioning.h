@@ -33,7 +33,6 @@ typedef struct{
 class TelePositioning{
     private:
 #ifdef GPS_UART
-    GnssSerial* parser;
     BufferedSerial*gnss;
 #else
     GnssI2C* gnss;

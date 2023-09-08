@@ -21,9 +21,9 @@ void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position
     if ((buffer[0] == '$') || buffer[1] == 'G'){
         if (_CHECK_TALKER(buffer,"GLL")){
             char ch;
-            if (parser->getNmeaAngle(1, buffer, length, position->position.latitude) &&
-                parser->getNmeaAngle(3, buffer, length, position->position.longitude) &&
-                parser->getNmeaItem(6, buffer, length, ch) &&
+            if (GnssSerial::getNmeaAngle(1, buffer, length, position->position.latitude) &&
+                GnssSerial::getNmeaAngle(3, buffer, length, position->position.longitude) &&
+                GnssSerial::getNmeaItem(6, buffer, length, ch) &&
                 ch == 'A')
                 debugPrint("GNSS: location %.5f %.5f %c.\n",
                             position->position.latitude, position->position.longitude, ch);
@@ -34,15 +34,15 @@ void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position
             int gpsFix;
 
             // Retrieve the time
-            pTimeString = parser->findNmeaItemPos(1, buffer, buffer + length);
+            pTimeString = GnssSerial::findNmeaItemPos(1, buffer, buffer + length);
             // Retrieve gps Fix
-            if(parser->getNmeaItem(6, buffer, length, gpsFix, 10)){
+            if(GnssSerial::getNmeaItem(6, buffer, length, gpsFix, 10)){
                 position->satelliteInfo.gpsFix = gpsFix;
                 debugPrint("GNSS: gpsFix is %d.\n",gpsFix);
             }
             // Retrieve numbSat
             int numbSat;
-            if(parser->getNmeaItem(7,buffer,length,numbSat,10)){
+            if(GnssSerial::getNmeaItem(7,buffer,length,numbSat,10)){
                 position->satelliteInfo.numbSat = (uint8_t)numbSat;
                 debugPrint("GNSS: numbSat is %d.\n",gpsFix);
             }
@@ -53,21 +53,21 @@ void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position
                 debugPrint("GNSS: time is %.6s.\n", pTimeString);
             }
 
-            if (parser->getNmeaItem(9, buffer, length, position->position.elevation)) // altitude msl [m]
+            if (GnssSerial::getNmeaItem(9, buffer, length, position->position.elevation)) // altitude msl [m]
             {
                 debugPrint("GNSS: elevation: %.1f.\n", position->position.elevation);
             }
         }
         else if (_CHECK_TALKER(buffer,"VTG"))
         {
-            if (parser->getNmeaItem(7, buffer, length, position->position.speed)) // speed [km/h]
+            if (GnssSerial::getNmeaItem(7, buffer, length, position->position.speed)) // speed [km/h]
             {
                 debugPrint("GNSS: speed: %.1f.\n", position->position.speed);
             }
         }
         else if(_CHECK_TALKER(buffer, "RMC"))
         {
-            if (parser->getNmeaItem(9,buffer,length,position->satelliteInfo.satDate,10)){
+            if (GnssSerial::getNmeaItem(9,buffer,length,position->satelliteInfo.satDate,10)){
                 debugPrint("GNSS: date: %d\n",position->satelliteInfo.satDate);
             }
         }
@@ -79,9 +79,9 @@ void TelePositioning::gnssParse(char* buffer, int length, LatLong* position){
     if ((buffer[0] == '$') || buffer[1] == 'G'){
         if (_CHECK_TALKER(buffer,"GLL")){
             char ch;
-            if (parser->getNmeaAngle(1, buffer, length, position->latitude) &&
-                parser->getNmeaAngle(3, buffer, length, position->longitude) &&
-                parser->getNmeaItem(6, buffer, length, ch) &&
+            if (GnssSerial::getNmeaAngle(1, buffer, length, position->latitude) &&
+                GnssSerial::getNmeaAngle(3, buffer, length, position->longitude) &&
+                GnssSerial::getNmeaItem(6, buffer, length, ch) &&
                 ch == 'A')
                 debugPrint("GNSS: location %.5f %.5f %c.\n",
                             position->latitude, position->longitude, ch);
