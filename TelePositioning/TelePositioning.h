@@ -39,8 +39,8 @@ class TelePositioning{
 #endif
     /* GPS PRIVATE INTERACTION METHODS */
     int getDataFromGPS(char* message);
-    void gnssParse(char* buffer, int returnCode, PositionInfo* position);
-    void gnssParse(char* buffer, int length, LatLong* position);
+    void gnssParse(char* buffer, uint8_t length, PositionInfo* position);
+    void gnssParse(char* buffer, uint8_t length, LatLong* position);
     
     public:
     LatLong position;

@@ -16,7 +16,7 @@ void TelePositioning::init(){
 }
 
 // This function is heavily based on the ublox-gnss unit test `test_serial_time()` if not an almost copy-paste
-void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position){
+void TelePositioning::gnssParse(char* buffer, uint8_t length, PositionInfo* position){
     //Check if it's one of either: Galileo, Beidou, Glonass, GNSS or Combined
     if ((buffer[0] == '$') || buffer[1] == 'G'){
         if (_CHECK_TALKER(buffer,"GLL")){
@@ -74,7 +74,7 @@ void TelePositioning::gnssParse(char* buffer, int length, PositionInfo* position
     }
 }
 
-void TelePositioning::gnssParse(char* buffer, int length, LatLong* position){
+void TelePositioning::gnssParse(char* buffer, uint8_t length, LatLong* position){
     //Check if it's one of either: Galileo, Beidou, Glonass, GNSS or Combined
     if ((buffer[0] == '$') || buffer[1] == 'G'){
         if (_CHECK_TALKER(buffer,"GLL")){
