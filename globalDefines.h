@@ -39,10 +39,19 @@
 /* STORAGE DEFINES */
 /* FLASH SPI INTERFACE */
 
+#define FLASH_EN
 #define FLASH_MOSI  PA_7
 #define FLASH_MISO  PA_6
 #define FLASH_SCLK  PA_5
 #define FLASH_CS    PA_4
+
+/* SD CARD SPI INTERFACE */ 
+
+#define SD_EN
+#define SD_MOSI     PC_3
+#define SD_MISO     PC_2
+#define SD_SCLK
+#define SD_CS
 
 // #define FORCE_REFORMAT_FLASH
 
@@ -51,6 +60,7 @@
 
 #define DEBUG_MESSAGES
 #define DEBUG_NMEA_MESSAGES
+#define FILE_PRINT
 
 // If debug messages are active, debugPrint is used as printf, otherwise it
 // will be treated as an empty function
@@ -67,3 +77,9 @@
 #else
 #define debugPrintNMEA(...)
 #endif 
+
+#ifdef FILE_PRINT
+#define filePrint(...) printf(__VA_ARGS__)
+#else
+#define filePrint(...)
+#endif

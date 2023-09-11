@@ -5,6 +5,10 @@ int TeleData::initSensors(){
     // Starts GPS
     position.init();
     // TODO: Start sensors
+    //Starts storage
+    storage.initFlashStorage(); // Flash
+    storage.createFlashFile();
+    // TODO: Start SD Card
     return error;
 }
 
@@ -27,6 +31,15 @@ void TeleData::updateData(Data* data){
     _updateGPS(data);
     // TODO: update Sensors
     debugPrintData(*data);
+}
+
+void TeleData::storeData(Data data){
+    #ifdef FLASH_EN
+    storage.writeFlashFile(data);
+    #endif
+    #ifdef SD_EN
+    // TODO: Store SD card data
+    #endif
 }
 
 void TeleData::debugPrintData(Data data){
