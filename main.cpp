@@ -9,7 +9,6 @@
 
 #include "TeleRadio.h"
 #include "TeleData.h"
-#include "Storage.h"
 
 Data data;
 DigitalOut debugLED(LED1);
