@@ -22,14 +22,16 @@ void setupUSBSerial()
 int main(){
     setupUSBSerial();
     debugPrint("Start program\n");
-    TeleRadio tradio;
-    TeleData tdata;
-    tradio.init();
-    tdata.initSensors();
+    // TeleRadio tradio;
+    // TeleData tdata;
+    // tradio.init();
+    // tdata.initSensors();
     Storage st;
-    st.initFlashStorage();
-    st.createFlashFile();
-    st.closeFlashFile();
+    st.initSDStorage();
+    st.createSDFile();
+    // st.initFlashStorage();
+    // st.createFlashFile();
+    // st.closeFlashFile();
     while(1){
         // tdata.updateData(&data);
         // if(tradio.radioStatus() != RF_TX_RUNNING){

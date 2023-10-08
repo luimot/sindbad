@@ -48,13 +48,13 @@
 /* SD CARD SPI INTERFACE */ 
 
 #define SD_EN
-#define SD_MOSI     PC_3
+#define SD_MOSI     PC_1
 #define SD_MISO     PC_2
-#define SD_SCLK
-#define SD_CS
+#define SD_SCLK     PB_10
+#define SD_CS       PA_9
 
 // #define FORCE_REFORMAT_FLASH
-
+// #define FORCE_REFORMAT_SD
 
 /* PRINT OPTION DEFINES */
 

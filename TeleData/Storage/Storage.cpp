@@ -51,12 +51,15 @@ char* Storage::nextFile(bool isFlash){
     char number[4];
     uint16_t current_filename_index = 0;
     next_filename = (char*)malloc(FILENAME_MAX*sizeof(char));
-    if(isFlash)
+    if(isFlash){
         dir = opendir(FLASH_ROOT_DIR);
-    else
+        debugPrint("Reading directory %s...\n",FLASH_ROOT_DIR);
+    }
+    else{
         dir = opendir(SD_ROOT_DIR);
+        debugPrint("Reading directory %s...\n",SD_ROOT_DIR);
+    }
     
-    debugPrint("Reading directory %s...\n",FLASH_ROOT_DIR);
     while(1){  
         // Defaults to log000.bin, where each 0 can be a number from 0 to 9, starting at 001
         struct dirent *entity = readdir(dir);
@@ -142,4 +145,49 @@ void Storage::deinitFlashStorage(){
 
 void Storage::eraseFlash(){
     flashBlockDevice->erase(0,flashBlockDevice->size());    // Full erase
+}
+
+int Storage::initSDStorage(){
+    int err = 0;
+    debugPrint("Starting SD Block Device...\n");
+    sdBlockDevice = new SDBlockDevice(SD_MOSI,SD_MISO,SD_SCLK,SD_CS);
+    debugPrint("Starting SD LFS...\n");
+    sdFS = new LittleFileSystem2(SD_ROOT);
+    debugPrint("Mounting LFS with SD Block device...");
+    err = sdFS->mount(sdBlockDevice); //Not mounting
+    err?debugPrint("Failed\n"):debugPrint("Ok\n");
+    #ifndef FORCE_REFORMAT_SD
+    if(err){
+        debugPrint("SD did not mount, reformatting...");
+        err = LittleFileSystem2::format(sdBlockDevice);
+        err?debugPrint("Failed!\n"):debugPrint("Ok!\n");
+    }
+    #else
+    debugPrint("Force reformat on, reformatting...");
+    err = LittleFileSystem2::format(sdBlockDevice);
+    err?debugPrint("Failed!\n"):debugPrint("Ok!\n");
+    #endif
+    return err;
+}
+
+void Storage::createSDFile(){
+    // char* nextFName = nextFile(false);
+    // if(strcmp(nextFName,"nope") == 0){
+    //     // TODO: Treat error, stop and beep error
+    // }
+    // filenameSD = (char*)malloc(FILENAME_SIZE*sizeof(char));
+    // strcpy(filenameSD,FLASH_ROOT_DIR);
+    // strcat(filenameSD,nextFName);
+    // fSD = fopen(filenameSD, "w+");
+    // fclose(fSD); //TODO: remove this line pls
+    // fSD = fopen("/sd/teste.txt","w");
+    // fclose(fSD);
+    dir = opendir(SD_ROOT_DIR);
+    while(1){  
+        // Defaults to log000.bin, where each 0 can be a number from 0 to 9, starting at 001
+        struct dirent *entity = readdir(dir);
+        if(!entity)
+            break;
+        debugPrint("%s\n",entity->d_name);
+    }
 }

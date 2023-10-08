@@ -1,3 +1,5 @@
+#include "FATFileSystem.h"
+#include "SDBlockDevice.h"
 #include "mbed.h"
 #include "blockdevice/COMPONENT_SPIF/include/SPIF/SPIFBlockDevice.h"
 #include "LittleFileSystem2.h"
@@ -20,7 +22,8 @@
 
 class Storage{
     private:
-        SPIFBlockDevice *sdBlockDevice, *flashBlockDevice;
+        SPIFBlockDevice *flashBlockDevice;
+        SDBlockDevice *sdBlockDevice;
         LittleFileSystem2 *sdFS, *flashFS;
         FILE *fSD, *fFlash;
         DIR *dir;
@@ -37,4 +40,26 @@ class Storage{
         void createFlashFile();
         uint16_t writeFlashFile(Data data);
         void deinitFlashStorage();
+        /* SD CARD STORAGE METHODS */
+        int initSDStorage();
+        void eraseSD();
+        void openSDFile();
+        void readSDFile(char* path);
+        void closeSDFile();
+        void createSDFile();
+        uint16_t writeSDFile(Data data);
+        void deinitSDStorage();
 };
+
+typedef struct{
+    SPIFBlockDevice *blockDevice;
+    LittleFileSystem2 *flashFS;
+    FILE *file;
+
+} FlashDevice;
+
+typedef struct{
+    SDBlockDevice *blockDevice;
+    FATFileSystem *sdFS;
+    FILE *file;
+} SDdevice;
