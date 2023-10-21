@@ -10,8 +10,8 @@
 #include <cstring>
 #include <cstdint>
 
-#define FLASH_ROOT "f"
-#define FLASH_ROOT_DIR "/f/"
+#define FLASH_ROOT "fl"
+#define FLASH_ROOT_DIR "/fl/"
 #define SD_ROOT "sd"
 #define SD_ROOT_DIR "/sd/"
 
@@ -20,46 +20,48 @@
 /* STORAGE FUNCTION-LIKE MACROS */
 #define _CHECK_LOGFILE(filename, s) filename[0] == s[0] && filename[1] == s[1] && filename[2] == s[2]   
 
-class Storage{
-    private:
-        SPIFBlockDevice *flashBlockDevice;
-        SDBlockDevice *sdBlockDevice;
-        LittleFileSystem2 *sdFS, *flashFS;
-        FILE *fSD, *fFlash;
-        DIR *dir;
-        char *filenameSD, *filenameFlash;
-        char* nextFile(bool iFlash);
 
-    public:
-        /* FLASH STORAGE METHODS */        
-        int initFlashStorage();
-        void eraseFlash();
-        void openFlashFile();
-        void readFlashFile(char* path);
-        void closeFlashFile();
-        void createFlashFile();
-        uint16_t writeFlashFile(Data data);
-        void deinitFlashStorage();
-        /* SD CARD STORAGE METHODS */
-        int initSDStorage();
-        void eraseSD();
-        void openSDFile();
-        void readSDFile(char* path);
-        void closeSDFile();
-        void createSDFile();
-        uint16_t writeSDFile(Data data);
-        void deinitSDStorage();
+struct StorageDevice{
+    FILE *file;
+    char* filename;
+    virtual const char* rootDir() const {
+        return "";
+    }
+
 };
 
-typedef struct{
+struct FlashDevice : StorageDevice{
     SPIFBlockDevice *blockDevice;
-    LittleFileSystem2 *flashFS;
-    FILE *file;
+    LittleFileSystem2 *fs;
+    virtual const char* rootDir() const {
+        return FLASH_ROOT_DIR;
+    }
+} ;
 
-} FlashDevice;
-
-typedef struct{
+struct SDdevice : StorageDevice{
     SDBlockDevice *blockDevice;
-    FATFileSystem *sdFS;
-    FILE *file;
-} SDdevice;
+    FATFileSystem *fs;
+    virtual const char* rootDir() const {
+        return SD_ROOT_DIR;
+    }
+};
+
+class Storage{
+    private:
+        DIR *dir;
+        char* nextFile(StorageDevice* storage);
+        char* getCurrentPath(StorageDevice storage);
+
+    public:
+        FlashDevice flash;
+        SDdevice sd;
+        /* STORAGE METHODS */
+        template <class DeviceType> int initStorage();
+        template <class DeviceType> void eraseStorage();
+        void openFile(StorageDevice* storage);
+        void readFile(StorageDevice* storage);
+        void closeFile(StorageDevice* storage);
+        void createFile(StorageDevice storage);
+        uint16_t writeFile(Data data, FILE* file);
+        void deinitStorage();
+};

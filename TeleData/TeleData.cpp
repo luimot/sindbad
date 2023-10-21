@@ -6,9 +6,14 @@ int TeleData::initSensors(){
     position.init();
     // TODO: Start sensors
     //Starts storage
-    storage.initFlashStorage(); // Flash
-    storage.createFlashFile();
-    // TODO: Start SD Card
+    #ifdef FLASH_EN
+    storage.initStorage<FlashDevice>();
+    storage.createFile(storage.flash);
+    #endif
+    #ifdef SD_EN
+    storage.initStorage<SDdevice>();
+    storage.createFile(storage.sd);
+    #endif
     return error;
 }
 
@@ -35,10 +40,10 @@ void TeleData::updateData(Data* data){
 
 void TeleData::storeData(Data data){
     #ifdef FLASH_EN
-    storage.writeFlashFile(data);
+    storage.writeFile(data,storage.flash.file);
     #endif
     #ifdef SD_EN
-    // TODO: Store SD card data
+    storage.writeFile(data,storage.sd.file);
     #endif
 }
 

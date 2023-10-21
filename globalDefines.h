@@ -39,7 +39,7 @@
 /* STORAGE DEFINES */
 /* FLASH SPI INTERFACE */
 
-#define FLASH_EN
+// #define FLASH_EN
 #define FLASH_MOSI  PA_7
 #define FLASH_MISO  PA_6
 #define FLASH_SCLK  PA_5
